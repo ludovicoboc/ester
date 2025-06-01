@@ -5,10 +5,21 @@ export const maxDuration = 30
 
 export async function POST(req: Request) {
   try {
-    const { topic, documents, slideCount = 10 } = await req.json()
+    const { 
+      topic, 
+      documents, 
+      slideCount = 10, 
+      themeId = "clean",
+      promptTemplate,
+      includeImages = true,
+      includeExamples = true,
+      simpleLanguage = false,
+      includeQuestions = true,
+      isEducationalFocus = false
+    } = await req.json()
 
-    // Pré-prompt otimizado para criação de slides
-    const systemPrompt = `Você é um especialista em criação de apresentações e pesquisa acadêmica. Sua tarefa é:
+    // Usar o prompt personalizado se fornecido, senão usar o padrão
+    const systemPrompt = promptTemplate || `Você é um especialista em criação de apresentações e pesquisa acadêmica. Sua tarefa é:
 
 1. Realizar uma pesquisa profunda sobre o tópico fornecido
 2. Estruturar o conteúdo em slides organizados e coerentes
@@ -35,6 +46,40 @@ Por favor, estruture a apresentação com:
 - Referências
 
 `
+
+    // Adicionar instruções específicas com base nas configurações
+    if (isEducationalFocus) {
+      researchPrompt += `
+Esta apresentação será usada em contexto educacional (sala de aula).
+Adapte o conteúdo para fins didáticos, usando linguagem apropriada para estudantes.
+Inclua objetivos de aprendizagem no início e um resumo no final.
+`
+    }
+
+    if (includeImages) {
+      researchPrompt += `
+Sugira imagens ou elementos visuais relevantes para cada slide.
+`
+    }
+
+    if (includeExamples) {
+      researchPrompt += `
+Inclua exemplos práticos e casos reais para ilustrar os conceitos.
+`
+    }
+
+    if (simpleLanguage) {
+      researchPrompt += `
+Use linguagem simples e acessível, evitando termos técnicos desnecessários.
+Explique conceitos complexos de forma clara e direta.
+`
+    }
+
+    if (includeQuestions) {
+      researchPrompt += `
+Adicione perguntas para discussão ou reflexão ao final da apresentação.
+`
+    }
 
     // Se houver documentos anexados, incluir no prompt
     if (documents && documents.length > 0) {
